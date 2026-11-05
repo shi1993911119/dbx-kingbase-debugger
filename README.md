@@ -1,8 +1,13 @@
-# DBX 金仓 PL/SQL 调试器 0.9.2
+# DBX 金仓 PL/SQL 调试器 0.9.3
 
-本地开发插件，目标为 DBX `v0.6.65-beta.20261103.1`、Windows 10／11 x64／macOS arm64 和 KingbaseES `V008R006C007B0024` Oracle 兼容模式。0.9.0 新增 Windows x64 启动器与 Windows 凭据管理器支持，0.9.1 加入 DataGrip 默认快捷键，0.9.2 修复 Windows 插件沙箱内“保存并连接”无响应的问题，参数确认和粘贴解析同时改为直接响应按钮点击。
+DBX 第三方插件，目标为 DBX `v0.6.65-beta.20261103.1`、Windows 10／11 x64／macOS arm64 和 KingbaseES `V008R006C007B0024` Oracle 兼容模式。0.9.0 新增 Windows x64 启动器与 Windows 凭据管理器支持，0.9.1 加入 DataGrip 默认快捷键，0.9.2 修复 Windows 插件沙箱内“保存并连接”无响应的问题，参数确认和粘贴解析同时改为直接响应按钮点击。
 
-包文件：`dist/local.kingbase.debugger-0.9.2-windows-x64.dbxp` 与 `dist/local.kingbase.debugger-0.9.2-darwin-arm64.dbxp`。Windows 安装说明见 `docs/WINDOWS.md`，历史包保留于 `dist/`。这是未签名开发包，尚未通过 DBX 商店审核。调试核心已在本机 DBX 内安装并完成独立测试过程的实库联调：两条专用连接、入口暂停、单步、行断点、变量、调用栈对象与行号、继续完成、输出以及停止。各版本验证记录与尚未覆盖的范围见 `docs/VALIDATION.md`。
+包文件：`dist/io.github.shi1993911119.kingbase-debugger-0.9.3-windows-x64.dbxp` 与 `dist/io.github.shi1993911119.kingbase-debugger-0.9.3-darwin-arm64.dbxp`。Windows 安装说明见 `docs/WINDOWS.md`。只发布本次重新构建的 0.9.3 候选包；旧 `dist/` 文件不能用于市场提交。这是未签名开发包，尚未通过 DBX 商店审核。调试核心已在本机 DBX 内安装并完成独立测试过程的实库联调：两条专用连接、入口暂停、单步、行断点、变量、调用栈对象与行号、继续完成、输出以及停止。各版本验证记录与尚未覆盖的范围见 `docs/VALIDATION.md`。
+
+
+0.9.3 为首次市场候选版，发布者为 `shi1993911119`，正式插件 ID 为 `io.github.shi1993911119.kingbase-debugger`。源码、候选包检查、依赖来源与权限说明见 `docs/RELEASING.md`、`docs/SECURITY.md` 和 `THIRD-PARTY.md`。市场正式安装需等待 DBX Store 审核并签名。
+
+**从旧开发版升级：** `local.kingbase.debugger` 与正式版被 DBX 视为两个插件，数据目录和凭据服务命名空间独立。正式版不会自动读取或迁移旧连接与密码；请在本机重新填写连接，并按需记住密码。确认新连接可用后再卸载旧插件。后续相同正式 ID 的升级保留配置。
 
 ## 已实现
 
@@ -132,22 +137,22 @@
 
 ## 开发与测试
 
-需要 Java JDK 11+、Go 1.24+、Node.js、官方 `@dbx-app/plugin-cli@0.1.9`。Go 构建原生启动器；调试核心用 Java JDBC；macOS 构建另需 Swift，Security helper 访问本插件自己的钥匙串项；Windows helper 使用 Go 调用 CredReadW／CredWriteW／CredDeleteW。
+需要 Java JDK 11+、Go 1.27.3、Node.js、官方 `@dbx-app/plugin-cli@0.1.10`。Go 构建原生启动器；调试核心用 Java JDBC；macOS 构建另需 Swift，Security helper 访问本插件自己的钥匙串项；Windows helper 使用 Go 调用 CredReadW／CredWriteW／CredDeleteW。
 
 ```sh
 sh scripts/test-backend.sh
-npm install
+npm ci
 npm run test:ui
 npm run test:import
 npm run test:launcher
 npm run test:layout
 npm run test:shortcuts
 sh scripts/build.sh
-python3 scripts/test-keychain.py
-sh scripts/test-keychain-backend.sh
+python3 scripts/verify-packages.py
+# 解包后可用 DBX_TEST_RUNTIME_ROOT 指向运行时目录进行凭据合成测试
 ```
 
-`scripts/build.sh` 先编译 Java，再调用官方 `dbx-plugin package`。`dbx-plugin.toml` 中的 Go 后端是 JVM 启动器，不包含数据库驱动代码。macOS launcher 使用 `syscall.Exec` 保持同一进程 PID 和标准输入输出。Windows launcher 继承标准输入输出，并用私有 Windows Job Object 在自身退出／被强制终止时清理 Java 与后代进程。Windows 原生构建使用 `scripts/build-windows.ps1`，需在 Windows 上运行 x64 版官方 CLI；脚本使用临时 staging，只打包该平台的 helper，不混入 Mac 二进制。
+`scripts/build.sh` 在临时 staging 中编译 Java 和 Swift，再调用官方 `dbx-plugin package --target darwin-arm64`；生成文件不覆盖源码目录。两种平台的包均包含 MIT 与第三方许可证。`dbx-plugin.toml` 中的 Go 后端是 JVM 启动器，不包含数据库驱动代码。macOS launcher 使用 `syscall.Exec` 保持同一进程 PID 和标准输入输出。Windows launcher 继承标准输入输出，并用私有 Windows Job Object 在自身退出／被强制终止时清理 Java 与后代进程。Windows 原生构建使用 `scripts/build-windows.ps1`，需在 Windows 上运行 x64 版官方 CLI；脚本使用临时 staging，只打包该平台的 helper，不混入 Mac 二进制。
 
 后台自动化使用可阻塞的 JDBC 测试替身，覆盖并发、清理、类型引用和参数绑定；这些测试不连接数据库。详见 `docs/VALIDATION.md`，其中明确区分实库结果、模拟测试和宿主待验证项。
 

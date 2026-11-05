@@ -1,6 +1,28 @@
-# 验证记录 · 2026-11-03 至 2026-11-04
+# 验证记录 · 2026-11-03 至 2026-11-05
 
 > 隐私说明：本记录已脱敏。连接名、数据库名、用户名、模式名、业务过程与参数名称、业务输入值均已替换为虚构示例；会话 PID 和自定义对象 OID 已省略。历史验证结论及功能限制保留，示例名称不代表当时的真实环境。
+
+## 0.9.3 首次市场候选包 · 2026-11-05
+
+正式 ID `io.github.shi1993911119.kingbase-debugger`、发布者 `shi1993911119`；manifest、Java 后端、contribution IDs 和两平台凭据服务命名空间已一致更新。旧开发版连接与密码不自动迁移。构建使用临时 staging，源码不再跟踪生成的 Java JAR 和 native helper；只随包分发项目 LICENSE 与 THIRD-PARTY.md、Gson、Go 许可证、必要运行文件和 UI。
+
+两平台均由官方 CLI **0.1.10** 和 Go **1.27.3** 实际构建。macOS 使用 Azul JDK 11.0.16.1、系统 Swift；Windows 使用经微软 SHA-256 校验的 Microsoft OpenJDK 21.0.9+10 x64，在 Windows 11 ARM64 的 x64 兼容环境原生打包。Go 下载按官方 SHA-256、Windows CLI 按 npm registry SHA-512 校验。Gson 2.14.0 与 Maven Central 官方 JAR 逐字节一致，校验值见 THIRD-PARTY.md。Windows 共享路径上的 helper 构建禁用 VCS stamping，避免跨 OS Git 目录所有权检查影响构建；发布来源以固定 tag 和包 SHA-256 记录。
+
+通过的验证：
+
+- 源码与最终打包的 Java 后端均通过 152 项断言；六组 JavaScript 测试与两平台快捷键通过。实际 macOS Chrome 的 allow-scripts-only iframe 中点击、参数确认、粘贴、回车与 F8 回归通过，RPC 为合成替身。
+- `scripts/verify-packages.py` 对两个最终包逐项核对：完整 checksum 覆盖、manifest 身份/版本/权限、原生架构、Java class major 55、UI/图标与当前源码逐字节一致、许可证与 Gson 来源、精确文件白名单、未签名状态、凭据/私有 IP/本机路径扫描。包内无测试 JDBC、专有驱动、配置文件或其他平台 helper。
+- macOS 最终 Go launcher → Java 初始化返回正式 ID/0.9.3，临时目录 profiles/list 为空，EOF 正常退出；新随机合成钥匙串项保存/读取/替换/空值/删除，以及打包 Java 后端重建后使用已保存合成密码连接 JDBC 替身、断开保留和删除均通过。
+- Windows 最终包从含空格与中文路径解压运行：原生凭据管理器合成项的保存/状态/读取/替换/空值/2551 字节边界/超限拒绝/删除通过；RPC 初始化与空连接列表通过；EOF 与强制结束 launcher 后 Java 进程清理通过。152 后端断言与打包 Java → native helper 集成通过。两个 Go 模块在 Windows test/vet 通过，Mac launcher 的 test/vet 通过。
+- 对全部 58 个既存可达 Git blob（含嵌套 JAR）以及当前源码、新包中的原数据库/业务标记扫描无命中；Mac 原生文件未包含本机 home 路径。发布前再对最终 Git 提交和两包检查。
+- 官方 dbx-store checkout 的 `node scripts/validate.mjs --plan-candidates` 通过，提交仅含 publisher、candidate 与自动发现源登记。普通校验会在候选等待商店签名时按设计失败。该检查不证明公开下载链接可达或审核已通过。
+
+本轮全部测试使用合成数据与 JDBC 替身，不访问业务数据库、不读取既存密码。尚未在新 ID 的 DBX GUI 内执行实库调试；实体 Intel/AMD Windows、Windows 10 和 Windows DBX 内完整联调仍未验证。历史实库能力见下方记录。已提供 GitHub Actions 工作流，尚未实际执行托管 CI，不能将其视为本轮通过证据。
+
+0.9.3 最终候选 SHA-256：
+
+- darwin-arm64：`17f2808f768ad32d1fdba4187ab479d3f2b6ed41d136f11798de09437bece187`（2274453 bytes）。
+- windows-x64：`8a8428a2cc10c80a45a688672a934b23057d13decb8afb68238b5302809c2e72`（3778209 bytes）。
 
 ## 仓库脱敏复验 · 2026-11-05
 
@@ -8,7 +30,7 @@
 
 脱敏后重新通过：152 项后端断言、六组 JavaScript 测试（调试 UI、调用解析、导入 UI、连接管理、面板布局、两平台快捷键），以及真实 Chromium 的 allow-scripts-only 沙箱回归。本轮测试全部使用替身，没有连接真实数据库或读取既存凭据。已对 Git 跟踪文件扫描原有连接与业务标识，未发现残留。
 
-以下为历史版本的验证记录；包校验值和源码一致性结论仅对应当时构建的历史发行包。本轮未重新构建发行包。
+以下为历史版本的验证记录；包校验值和源码一致性结论仅对应当时构建的历史发行包。此处脱敏复验当时未重建发行包；后续 0.9.3 重建见上节。
 
 ## 0.9.2 Windows 沙箱内按钮无响应修复
 

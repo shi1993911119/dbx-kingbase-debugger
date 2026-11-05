@@ -13,7 +13,7 @@ import (
 )
 
 const prefix = "DBX-KB-1\n"
-const service = "local.kingbase.debugger.database-password/"
+const service = "io.github.shi1993911119.kingbase-debugger.database-password/"
 const notFound = 1168
 
 type credential struct {

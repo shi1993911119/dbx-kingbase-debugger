@@ -1,6 +1,6 @@
-# Windows 10／11 x64 安装说明（0.9.2）
+# Windows 10／11 x64 安装说明（0.9.3）
 
-安装文件：`local.kingbase.debugger-0.9.2-windows-x64.dbxp`。这是 DBX 插件安装包，不是独立 EXE。面向 64 位 Intel／AMD Windows，不支持 32 位 Windows。插件未签名，尚未上架市场。
+安装文件：`io.github.shi1993911119.kingbase-debugger-0.9.3-windows-x64.dbxp`。这是 DBX 插件安装包，不是独立 EXE。面向 64 位 Intel／AMD Windows，不支持 32 位 Windows。插件未签名，尚未上架市场。
 
 ## 接收方准备
 
@@ -20,11 +20,15 @@
 
 记住密码使用 Windows 凭据管理器，按当前 Windows 用户保存到本机，按插件连接 ID 与主机／端口／库名／用户名绑定。最多保存 2551 个 UTF-8 字节的密码；取消勾选并保存可删除。若系统策略禁止凭据存储，可取消记住后手工连接。升级、正常断开或关闭不会删除已记住的密码。
 
-## 0.9.2 按钮修复与升级
+## 从旧开发版升级
+
+0.9.3 使用正式插件 ID `io.github.shi1993911119.kingbase-debugger`。旧 `local.kingbase.debugger` 的连接与系统凭据不会自动迁移，请在正式版重新配置一次。确认新连接成功后，可卸载旧开发版。
+
+## 0.9.2 按钮修复（历史）
 
 修复 0.9.0／0.9.1 在 Windows Chromium 沙箱内“测试成功，但保存并连接没有反应”的点击问题。DBX 插件 iframe 只开放 `allow-scripts`，未开放 `allow-forms`；旧版依赖原生表单的 submit 事件。0.9.2 将连接、参数确认、粘贴解析改为普通按钮直接处理，连接操作前先检查必填项。连接窗口和参数输入框支持单独按 Enter 确认；粘贴文本中的 Enter 保持换行。
 
-关闭插件调试工作台后在插件中心安装 0.9.2，再重新从顶部“金仓调试”打开。已有连接配置和已记住的密码继续保留。成功连接后窗口自动关闭并加载对象；失败时窗口内显示具体错误并允许重试。该修复已在真实 Chromium 的同类沙箱、实际 UI 点击和合成 RPC 中回归；仍需接收方在 Windows 版 DBX 中回验。
+0.9.2 在原开发版 ID 下安装时可保留已有连接和密码；0.9.3 采用上述新 ID，需重新配置。成功连接后窗口自动关闭并加载对象；失败时窗口内显示具体错误并允许重试。该修复已在真实 Chromium 的同类沙箱、实际 UI 点击和合成 RPC 中回归；仍需接收方在 Windows 版 DBX 中回验。
 
 ## 调试快捷键
 
@@ -47,7 +51,7 @@ Windows：F8 单步跳过、F7 单步进入、F9 继续、Ctrl+F2 停止、Shift
 
 ## 开发者构建
 
-在 Windows 上安装 JDK 11+、Go 1.24+ 与 x64 版官方 `@dbx-app/plugin-cli@0.1.9`，设置 JAVA_HOME，并在项目根目录运行：
+在 Windows 上安装 JDK 11+、Go 1.27.3 与 x64 版官方 `@dbx-app/plugin-cli@0.1.10`，设置 JAVA_HOME，并在项目根目录运行：
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-windows.ps1

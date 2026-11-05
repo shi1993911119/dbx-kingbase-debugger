@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /** DBX Sidecar Protocol v1. stdout contains JSON-RPC only. Requires Java 11+. */
 public final class Main {
-    public static final String ID = "local.kingbase.debugger", VERSION = "0.9.2";
+    public static final String ID = "io.github.shi1993911119.kingbase-debugger", VERSION = "0.9.3";
     static final Gson JSON = new GsonBuilder().serializeNulls().disableHtmlEscaping().create();
     static final int MAX_JSON = 8 * 1024 * 1024;
     final Map<String, Session> sessions = new ConcurrentHashMap<>();

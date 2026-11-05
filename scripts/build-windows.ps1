@@ -16,7 +16,7 @@ function Invoke-Checked([string]$Program, [string[]]$Arguments) {
 try {
     $Stage = Join-Path $BuildRoot "plugin"
     New-Item -ItemType Directory -Force (Join-Path $Stage "lib"), (Join-Path $BuildRoot "classes") | Out-Null
-    foreach ($Item in @("assets", "ui", "launcher", "manifest.json", "dbx-plugin.toml")) {
+    foreach ($Item in @("assets", "ui", "launcher", "manifest.json", "dbx-plugin.toml", "LICENSE", "THIRD-PARTY.md")) {
         Copy-Item (Join-Path $PluginRoot $Item) $Stage -Recurse
     }
     foreach ($Item in @("gson.jar", "GSON-LICENSE.txt", "GO-LICENSE.txt")) { Copy-Item (Join-Path $PluginRoot "lib\$Item") (Join-Path $Stage "lib") }
@@ -25,7 +25,7 @@ try {
     Invoke-Checked (Join-Path $JavaHome "bin\jar.exe") @("cf", (Join-Path $Stage "lib\kingbase-debugger.jar"), "-C", (Join-Path $BuildRoot "classes"), ".")
     $env:GOOS = "windows"; $env:GOARCH = "amd64"; $env:CGO_ENABLED = "0"
     Push-Location (Join-Path $PluginRoot "native\windows")
-    try { Invoke-Checked "go" @("build", "-trimpath", "-ldflags=-s -w", "-o", (Join-Path $Stage "lib\credential-helper.exe"), ".") }
+    try { Invoke-Checked "go" @("build", "-trimpath", "-buildvcs=false", "-ldflags=-s -w", "-o", (Join-Path $Stage "lib\credential-helper.exe"), ".") }
     finally { Pop-Location }
     # Use the x64 distribution of the official CLI, including on Windows ARM64.
     # Keep CLI staging on a native Windows filesystem: some SMB/shared folders

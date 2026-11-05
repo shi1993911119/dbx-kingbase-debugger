@@ -1,11 +1,12 @@
 """Exercise only a fresh synthetic item; never list/read an existing user's credential."""
 import hashlib
 import json
+import os
 from pathlib import Path
 import subprocess
 import uuid
 
-helper = Path(__file__).resolve().parents[1] / "lib/keychain-helper"
+helper = Path(os.environ.get("DBX_TEST_RUNTIME_ROOT", Path(__file__).resolve().parents[1])) / "lib/keychain-helper"
 account = "private-" + str(uuid.uuid4()) + ":" + hashlib.sha256(b"dbx-synthetic-keychain-test").hexdigest()
 
 

@@ -1,7 +1,7 @@
 {
-  "name": "dbx-kingbase-debugger-local",
+  "name": "dbx-kingbase-debugger",
   "private": true,
-  "version": "0.9.2",
+  "version": "0.9.3",
   "scripts": {
     "test:ui": "node scripts/test-ui.cjs",
     "test:import": "node scripts/test-call-import.cjs && node scripts/test-import-ui.cjs",
@@ -10,7 +10,9 @@
     "test:launcher": "node scripts/test-launcher.cjs",
     "test:layout": "node scripts/test-layout.cjs",
     "test:shortcuts": "node scripts/test-shortcuts.cjs",
-    "test:browser": "node scripts/test-browser-forms.cjs"
+    "test:browser": "node scripts/test-browser-forms.cjs",
+    "verify:packages": "python3 scripts/verify-packages.py",
+    "release:metadata": "node scripts/release-metadata.mjs"
   },
   "devDependencies": {
     "jsdom": "26.1.0",
