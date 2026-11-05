@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>金仓 PL/SQL 调试</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header><strong>金仓 PL/SQL 调试</strong><span class="dbx-badge" id="state">正在连接宿主</span><span class="meta" id="connection">尚未连接</span><button class="dbx-btn" id="manageConnections" type="button">连接管理…</button></header>
+<section class="launch" aria-label="调试配置">
+  <label>模式<input class="dbx-input" id="schema" placeholder="连接后自动读取，可手动修改"></label>
+  <div class="launch-actions"><button class="dbx-btn" id="refresh">刷新列表</button><button class="dbx-btn" id="importCall" disabled>粘贴调用文本…</button></div>
+  <div class="grow routine-picker">
+    <label>按名称搜索<input class="dbx-input" id="routineSearch" type="search" placeholder="输入过程或函数名称，支持部分名称" maxlength="256" autocomplete="off" spellcheck="false" aria-describedby="routineCount"></label>
+    <label class="routine-label">过程／函数<select class="dbx-select" id="routine"><option value="">选择 PL/SQL 对象</option></select></label>
+    <span class="meta" id="routineCount" role="status">等待加载对象</span>
+  </div>
+  <div class="parameter-config"><span class="meta" id="parameterSummary">选择对象后填写参数</span><button class="dbx-btn" id="parameters" disabled>填写参数…</button></div>
+  <button class="dbx-btn dbx-btn--primary" id="start" disabled title="开始调试（Shift+F9）；先确认参数" aria-keyshortcuts="Shift+F9">开始调试 <kbd>Shift+F9</kbd></button>
+</section>
+<nav aria-label="调试操作"><button class="dbx-btn" id="stepOver" disabled title="单步跳过（F8）" aria-keyshortcuts="F8">单步跳过 <kbd>F8</kbd></button><button class="dbx-btn" id="stepInto" disabled title="单步进入（F7）" aria-keyshortcuts="F7">单步进入 <kbd>F7</kbd></button><button class="dbx-btn" id="continue" disabled title="继续（F9）" aria-keyshortcuts="F9">继续 <kbd>F9</kbd></button><button class="dbx-btn dbx-btn--danger" id="stop" disabled title="停止（Ctrl+F2）" aria-keyshortcuts="Control+F2">停止 <kbd>Ctrl+F2</kbd></button><span class="meta" id="position">点击源码行号可设置断点</span></nav>
+<div id="message" class="message" role="status">正在初始化调试工作台……</div>
+<main id="debugWorkspace">
+  <section class="source pane"><div class="pane-title"><strong id="sourceTitle">源码</strong><span class="meta" id="sourceOid"></span></div><div id="source" class="source-lines" tabindex="0" aria-label="过程源码；暂停后 Ctrl+F8 切换所选行断点" aria-keyshortcuts="Control+F8"><p class="empty">[数据库报告的原始源码与行号]</p></div></section>
+  <div id="sourceSplitter" class="splitter splitter-column" role="separator" tabindex="0" aria-orientation="vertical" aria-label="调整源码与变量区宽度" aria-controls="source inspector" title="左右拖动调整宽度；双击恢复；方向键微调"></div>
+  <aside id="inspector"><section class="pane vars"><div class="pane-title"><strong>变量与参数</strong></div><div id="variables" class="table-wrap"><p class="empty">[暂停后显示变量名称、类型和值]</p></div></section><div id="inspectSplitter" class="splitter splitter-row" role="separator" tabindex="0" aria-orientation="horizontal" aria-label="调整变量与调用栈高度" aria-controls="variables stack" title="上下拖动调整高度；双击恢复；方向键微调"></div><section class="pane stack"><div class="pane-title"><strong>调用栈</strong></div><div id="stack" class="table-wrap"><p class="empty">[暂停后显示调用帧]</p></div></section></aside>
+  <div id="outputSplitter" class="splitter splitter-row" role="separator" tabindex="0" aria-orientation="horizontal" aria-label="调整工作区与输出区高度" aria-controls="source inspector output" title="上下拖动调整高度；双击恢复；方向键微调"></div>
+  <section class="pane output"><div class="pane-title result-toolbar"><div class="output-tabs" role="tablist" aria-label="执行输出"><button id="outputTab" role="tab" aria-selected="true" aria-controls="output">输出</button><button id="resultTab" role="tab" aria-selected="false" aria-controls="resultPanel" disabled>结果集</button></div><label class="result-picker" hidden id="resultPicker">游标<select class="dbx-select" id="resultSelect" aria-label="选择返回游标"></select></label><span class="meta" id="resultSummary" role="status"></span><button class="dbx-btn dbx-btn--ghost" id="clear">清空显示</button></div><pre id="output" role="tabpanel" aria-labelledby="outputTab" aria-live="polite">[过程输出与调试状态]</pre><div id="resultPanel" role="tabpanel" aria-labelledby="resultTab" class="table-wrap" hidden></div></section>
+</main>
+<footer><span id="pids">执行连接 — ／ 控制连接 —</span><span id="extension">PL/SQL · 调试接口检查中</span></footer>
+<dialog id="parameterDialog" aria-labelledby="parameterTitle" aria-describedby="parameterHelp">
+  <form id="parameterForm">
+    <div class="dialog-heading"><h2 id="parameterTitle">调试参数</h2><button class="dbx-btn dbx-btn--ghost" type="button" id="parameterClose" aria-label="关闭参数窗口">关闭</button></div>
+    <p id="parameterRoutine" class="code parameter-routine"></p>
+    <p id="parameterHelp" class="meta">所有参数默认 NULL，直接输入内容会自动解除 NULL，清空后恢复 NULL。INOUT 填写初始值；OUT（包括游标）保持只读 NULL。文本无需 SQL 引号；需要空字符串时可手动取消 NULL。执行完成后显示返回值和游标结果集。</p>
+    <p id="parameterImport" class="import-notice" role="status" hidden></p>
+    <div id="parameterRows" class="parameter-rows"></div>
+    <p id="parameterError" class="parameter-error" role="alert"></p>
+    <div class="dialog-footer"><button class="dbx-btn" type="button" id="parameterCancel">取消</button><button class="dbx-btn dbx-btn--primary" id="parameterConfirm" type="button">保存参数</button></div>
+  </form>
+</dialog>
+<dialog id="importDialog" aria-labelledby="importTitle" aria-describedby="importHelp">
+  <form id="importForm">
+    <div class="dialog-heading"><h2 id="importTitle">粘贴调用文本</h2><button class="dbx-btn dbx-btn--ghost" type="button" id="importClose">关闭</button></div>
+    <p id="importHelp" class="meta">粘贴 DECLARE…BEGIN…END; 或 CALL 调用，自动识别过程、赋值和参数顺序。支持字符串、数字、NULL、已声明变量和命名参数。解析后打开参数窗口供检查，再点击“开始调试”执行。</p>
+    <label class="import-editor-label" for="importText">调用文本<textarea id="importText" class="dbx-input code" maxlength="262144" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="DECLARE&#10;    p_seed INTEGER;&#10;BEGIN&#10;    p_seed := 7;&#10;    my_procedure(p_seed);&#10;END;"></textarea></label>
+    <label id="importChoiceLabel" class="import-choice" hidden>发现多个重载，请选择签名<select class="dbx-select" id="importChoice"></select></label>
+    <p id="importError" class="parameter-error" role="alert"></p>
+    <div class="dialog-footer"><button class="dbx-btn" type="button" id="importCancel">取消</button><button class="dbx-btn dbx-btn--primary" id="importConfirm" type="button">解析并填入参数</button></div>
+  </form>
+</dialog>
+<dialog id="connectionDialog" aria-labelledby="connectionTitle" aria-describedby="connectionHelp">
+  <form id="connectionForm" autocomplete="off">
+    <div class="dialog-heading"><h2 id="connectionTitle">调试连接</h2><button class="dbx-btn dbx-btn--ghost" id="connectionClose" type="button">关闭</button></div>
+    <div class="connection-fields">
+      <div class="connection-select-row"><label class="grow">已保存的连接<select class="dbx-select" id="profileSelect"><option value="">新建连接</option></select></label><button class="dbx-btn" id="profileNew" type="button">新建</button><button class="dbx-btn dbx-btn--danger" id="profileDelete" type="button">删除</button></div>
+      <p id="connectionHelp" class="meta">配置保存在插件内，从顶部“金仓调试”进入。勾选“记住密码”后保存到系统凭据存储，下次留空即可使用。</p>
+      <div class="connection-grid">
+        <label class="full">连接名称<input id="profileName" class="dbx-input" required maxlength="256"></label>
+        <label>主机<input id="profileHost" class="dbx-input" required maxlength="256" spellcheck="false"></label>
+        <label>端口<input id="profilePort" class="dbx-input" type="number" required min="1" max="65535" value="54321"></label>
+        <label>数据库<input id="profileDatabase" class="dbx-input" required maxlength="256" spellcheck="false"></label>
+        <label>用户名<input id="profileUsername" class="dbx-input" required maxlength="256" autocomplete="off" spellcheck="false"></label>
+        <label class="full">Kingbase JDBC 文件绝对路径<input id="profileJdbcJar" class="dbx-input code" required maxlength="4096" placeholder="/path/to/kingbase8.jar" spellcheck="false"></label>
+        <label>密码<input id="profilePassword" class="dbx-input" type="password" autocomplete="new-password" aria-describedby="profilePasswordStatus"></label>
+        <label>连接超时（秒）<input id="profileTimeout" class="dbx-input" type="number" required min="1" max="60" value="30"></label>
+      </div>
+      <div class="password-options"><label><input id="profileRememberPassword" type="checkbox"><span id="profilePasswordLabel">记住密码（系统凭据存储）</span></label><span id="profilePasswordStatus" class="meta" role="status"></span></div>
+      <p id="profileMessage" class="message" role="status">选择已有连接，或填写配置后测试并连接。</p>
+      <div id="profileDeleteConfirm" class="delete-confirm" hidden><span id="profileDeleteText"></span><button type="button" class="dbx-btn" id="profileDeleteCancel">取消</button><button type="button" class="dbx-btn dbx-btn--danger" id="profileDeleteConfirmButton">确认删除</button></div>
+    </div>
+    <div class="dialog-footer"><button class="dbx-btn" id="profileDisconnect" type="button" disabled>断开连接</button><span class="grow"></span><button class="dbx-btn" id="profileSave" type="button">保存配置</button><button class="dbx-btn" id="profileTest" type="button">测试</button><button class="dbx-btn dbx-btn--primary" id="profileConnect" type="button">保存并连接</button></div>
+  </form>
+</dialog>
+<script src="forms.js"></script>
+<script src="launcher.js"></script>
+<script src="call-import.js"></script>
+<script src="layout.js"></script>
+<script src="app.js"></script>
+</body></html>

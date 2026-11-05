@@ -1,0 +1,62 @@
+{
+  "manifest_version": 1,
+  "id": "local.kingbase.debugger",
+  "name": "金仓 PL/SQL 调试器",
+  "version": "0.9.2",
+  "publisher": "local",
+  "description": "KingbaseES Oracle 兼容模式 PL/SQL 断点、单步、变量与调用栈调试；使用两条专用 JDBC 连接。",
+  "engines": {
+    "dbx": ">=0.6.65-beta.20261103.1",
+    "host_api": "^1.0"
+  },
+  "permissions": [
+    "host.events",
+    "host.workbench"
+  ],
+  "entrypoints": {
+    "backend": {
+      "executable": "bin/darwin-arm64/dbx-kingbase-debugger"
+    },
+    "ui": {
+      "root": "ui",
+      "entry": "ui/index.html"
+    }
+  },
+  "contributions": [
+    {
+      "type": "workbench",
+      "id": "local.kingbase.debugger.main",
+      "label": "金仓 PL/SQL 调试",
+      "description": "源码、断点、单步、变量、调用栈和输出。"
+    },
+    {
+      "type": "command",
+      "id": "local.kingbase.debugger.open",
+      "label": "金仓调试",
+      "description": "打开插件内的金仓调试连接与工作台。",
+      "icon": "assets/debugger.svg",
+      "action": {
+        "type": "open-workbench",
+        "workbench": "local.kingbase.debugger.main",
+        "presentation": "tab",
+        "context": {
+          "launcher": true
+        }
+      }
+    },
+    {
+      "type": "menus",
+      "id": "local.kingbase.debugger.menus",
+      "items": [
+        {
+          "location": "appToolbar",
+          "command": "local.kingbase.debugger.open",
+          "group": "primary",
+          "order": 10,
+          "default_visible": true
+        }
+      ]
+    }
+  ],
+  "icon": "assets/debugger.svg"
+}
