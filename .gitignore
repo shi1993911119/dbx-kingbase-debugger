@@ -9,3 +9,11 @@ dist/
 .env.*
 !.env.example
 debugger-connections.json
+
+# Generated runtime artifacts (build scripts use temporary staging)
+lib/kingbase-debugger.jar
+lib/keychain-helper
+lib/credential-helper.exe
+
+__pycache__/
+*.pyc

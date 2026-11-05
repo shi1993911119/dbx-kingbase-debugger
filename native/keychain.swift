@@ -3,7 +3,7 @@ import Security
 
 // A small, fixed-service helper. It has no command-line credential parameters or logging.
 // Use the file-based login keychain so a locally built, unsigned DBX plugin needs no app entitlement.
-let service = "local.kingbase.debugger.database-password"
+let service = "io.github.shi1993911119.kingbase-debugger.database-password"
 func respond(_ value: [String: Any]) -> Never {
     if let data = try? JSONSerialization.data(withJSONObject: value, options: [.sortedKeys]) {
         FileHandle.standardOutput.write(data)

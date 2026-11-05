@@ -1,0 +1,17 @@
+{
+  "name": "Kingbase PL/SQL Debugger",
+  "description": "Debug KingbaseES routines in Oracle compatibility mode with breakpoints, stepping, variables, call stacks and OUT cursors. Chinese workbench UI; requires local Java 11+ and a user-provided Kingbase JDBC driver.",
+  "icon": "assets/debugger.svg",
+  "tags": ["database", "kingbase", "debugger", "plsql"],
+  "permissions": ["host.events", "host.workbench"],
+  "source": "https://github.com/shi1993911119/dbx-kingbase-debugger",
+  "homepage": "https://github.com/shi1993911119/dbx-kingbase-debugger",
+  "license": "MIT",
+  "releaseNotes": "First public marketplace candidate. Establishes a stable publisher identity, rebuilds macOS ARM64 and Windows x64 candidates from sanitized source, includes dependency licenses and package verification. Legacy local development connections must be configured again under the new plugin ID.",
+  "localizations": {
+    "zh-CN": {
+      "name": "金仓 PL/SQL 调试器",
+      "description": "在 KingbaseES Oracle 兼容模式下调试过程与函数：断点、单步、变量、调用栈和 OUT 游标。需本机 Java 11+ 与用户自备的金仓 JDBC 驱动。"
+    }
+  }
+}

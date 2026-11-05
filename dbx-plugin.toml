@@ -6,4 +6,4 @@ directory = "launcher"
 binary = "dbx-kingbase-debugger"
 
 [package]
-include = ["assets", "ui", "lib"]
+include = ["assets", "ui", "lib", "LICENSE", "THIRD-PARTY.md"]

@@ -1,0 +1,104 @@
+name: Build and publish unsigned candidates
+"on":
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            target: darwin-arm64
+          - runner: windows-2022
+            target: windows-x64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '11'
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.3'
+          cache: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check version tag
+        shell: bash
+        run: |
+          node -e 'const m=require("./manifest.json");if(process.env.GITHUB_REF!==`refs/tags/v${m.version}`)throw Error("Run this workflow on the matching version tag")'
+      - run: npm ci
+      - run: npm install --global --registry https://registry.npmjs.org @dbx-app/plugin-cli@0.1.10
+      - name: UI regression
+        run: npm run test:ui && npm run test:import && npm run test:launcher && npm run test:layout && npm run test:shortcuts
+      - run: npx playwright install chromium
+      - run: npm run test:browser
+      - name: Build Mac candidate
+        if: runner.os == 'macOS'
+        run: sh scripts/test-backend.sh && sh scripts/build.sh
+      - name: Build Windows candidate
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/build-windows.ps1
+      - name: Verify candidate
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          PACKAGE=$(node -e 'const m=require("./manifest.json");console.log(`dist/${m.id}-${m.version}-${process.env.TARGET}.dbxp`)')
+          python scripts/verify-packages.py "$PACKAGE" --extract-to .dbx-dev/runtime
+      - name: Mac runtime integration
+        if: runner.os == 'macOS'
+        env:
+          DBX_TEST_RUNTIME_ROOT: ${{ github.workspace }}/.dbx-dev/runtime/darwin-arm64
+        run: python3 scripts/test-keychain.py && sh scripts/test-keychain-backend.sh
+      - name: Windows runtime integration
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $runtime = Join-Path $PWD '.dbx-dev/runtime/windows-x64'
+          node scripts/test-windows.cjs $runtime (Join-Path $env:JAVA_HOME 'bin/java.exe')
+          if ($LASTEXITCODE -ne 0) { throw 'Windows launcher tests failed' }
+          ./scripts/test-windows-backend.ps1 -RuntimeRoot $runtime
+      - uses: actions/upload-artifact@v4
+        with:
+          name: candidate-${{ matrix.target }}
+          path: |
+            dist/*.dbxp
+            dist/*.artifact.json
+          if-no-files-found: error
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: candidate-*
+          merge-multiple: true
+          path: dist
+      - run: python3 scripts/verify-packages.py && node scripts/release-metadata.mjs
+      - name: Publish new immutable-version candidate Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo 'Release exists; refusing to overwrite candidate assets' >&2
+            exit 1
+          fi
+          VERSION=$(node -p 'require("./manifest.json").version')
+          gh release create "$GITHUB_REF_NAME" --verify-tag --title "Kingbase PL/SQL Debugger $VERSION" --notes-file "docs/RELEASE-NOTES-$VERSION.md" dist/*.dbxp dist/*.artifact.json dist/release-candidates.json dist/SHA256SUMS
